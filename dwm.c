@@ -189,6 +189,7 @@ static void focus(Client *c);
 static void focusin(XEvent *e);
 static void focusmon(const Arg *arg);
 static void focusstack(const Arg *arg);
+static void monoclefocus ( const Arg *arg );
 static Atom getatomprop(Client *c, Atom prop);
 static int getrootptr(int *x, int *y);
 static long getstate(Window w);
@@ -989,6 +990,29 @@ focusstack(const Arg *arg)
 					c = i;
 	}
 	if (c) {
+		focus(c);
+		restack(selmon);
+	}
+}
+
+void
+monoclefocus ( const Arg *arg )
+{
+	Client *c = NULL;
+	int i = 0;
+
+	// si la ventana seleccionada actual esta en fullscreen no hacer nada
+	if ( !selmon->sel || ( selmon->sel->isfullscreen && lockfullscreen ) )
+	return;
+
+	for ( c = selmon->clients; c != NULL; c = c->next ) {
+    if ( ISVISIBLE(c) ) {
+      if (i == arg->i)
+        break;
+      i++;
+    }
+}
+	if ( c ) {
 		focus(c);
 		restack(selmon);
 	}

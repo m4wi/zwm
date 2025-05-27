@@ -1,11 +1,46 @@
---- dwm.c	2020-06-25 00:21:30.383692180 -0300
-+++ dwm.c	2020-06-25 00:20:35.643692330 -0300
-@@ -1057,6 +1057,8 @@ manage(Window w, XWindowAttributes *wa)
- 	updatewindowtype(c);
- 	updatesizehints(c);
- 	updatewmhints(c);
-+	c->x = c->mon->mx + (c->mon->mw - WIDTH(c)) / 2;
-+	c->y = c->mon->my + (c->mon->mh - HEIGHT(c)) / 2;
- 	XSelectInput(dpy, w, EnterWindowMask|FocusChangeMask|PropertyChangeMask|StructureNotifyMask);
- 	grabbuttons(c, 0);
- 	if (!c->isfloating)
+--- dwm.c
++++ dwm.c
+@@ -1278,6 +1307,16 @@ propertynotify(XEvent *e)
+ void
+ quit(const Arg *arg)
+ {
++	size_t i;
++
++	/* kill child processes */
++	for (i = 0; i < autostart_len; i++) {
++		if (0 < autostart_pids[i]) {
++			kill(autostart_pids[i], SIGTERM);
++			waitpid(autostart_pids[i], NULL, 0);
++		}
++	}
++
+ 	running = 0;
+ }
+ 
+@@ -1661,9 +1700,25 @@ showhide(Client *c)
+ void
+ sigchld(int unused)
+ {
++	pid_t pid;
++
+ 	if (signal(SIGCHLD, sigchld) == SIG_ERR)
+ 		die("can't install SIGCHLD handler:");
+-	while (0 < waitpid(-1, NULL, WNOHANG));
++	while (0 < (pid = waitpid(-1, NULL, WNOHANG))) {
++		pid_t *p, *lim;
++
++		if (!(p = autostart_pids))
++			continue;
++		lim = &p[autostart_len];
++
++		for (; p < lim; p++) {
++			if (*p == pid) {
++				*p = -1;
++				break;
++			}
++		}
++
++	}
+ }
+ 
+ void

@@ -111,6 +111,7 @@ struct Client {
 	Client *snext;
 	Monitor *mon;
 	Window win;
+	int tgidx[9]; // relative index of window pertag
 };
 
 typedef struct {

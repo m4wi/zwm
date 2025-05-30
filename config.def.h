@@ -40,7 +40,6 @@ static const char *colors[][3]      = {
 static const char *const autostart[] = {
 //  "killall", "picom", NULL,
   "/home/mawi/.wz", NULL,
-	"dwmblocks", NULL,
 	"vibrant-cli", "eDP-1", "2.125", NULL,
 	"picom", "-b", "--config", "/home/mawi/.config/picom/dwm-picom.conf", NULL,
 	"xinput", "disable", "10" , NULL,
@@ -154,7 +153,7 @@ static const Key keys[] = {
 	{ MODKEY,                       		XK_F3,      											monoclefocus,     			{.i = 2 } 								},
 	{ MODKEY,                       		XK_F4,      											monoclefocus,     			{.i = 4 } 								},
 	{ MODKEY,                       		XK_F5,      											monoclefocus,     			{.i = 5 } 								},
-	{ MODKEY,                 XK_less,      										focusstack,     				{.i = +1 } 								},
+	{ MODKEY,                 					XK_less,      										focusstack,     				{.i = +1 } 								},
 
 	TAGKEYS(                        		XK_1,                      0)
 	TAGKEYS(                        		XK_2,                      1)

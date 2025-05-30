@@ -1027,22 +1027,26 @@ focusstack(const Arg *arg)
 void
 monoclefocus ( const Arg *arg )
 {
-	Client *c = NULL;
-	int i = 0;
+	Client *c = NULL, *s = NULL;
+	unsigned short n = 0, i = 0;
 
 	// si la ventana seleccionada actual esta en fullscreen no hacer nada
 	if ( !selmon->sel || ( selmon->sel->isfullscreen && lockfullscreen ) )
 	return;
 
-	for ( c = selmon->clients; c != NULL; c = c->next ) {
+	for ( c = selmon->clients; c != NULL; c = c->next ) { // count all visible clients
     if ( ISVISIBLE(c) ) {
-      if (i == arg->i)
-        break;
-      i++;
+      if (n == arg->i) { // rescue idx in tag 
+				s = c;
+				i = n;
+			}
+      n++;
     }
-}
-	if ( c ) {
-		focus(c);
+	}
+	if ( s ) {
+		if (n > 0)
+			snprintf(selmon->ltsymbol, sizeof selmon->ltsymbol, "[%hu/%hu]", i + 1, n); // modify ltsymbol with window idx and number of windows
+		focus(s);
 		restack(selmon);
 	}
 }
@@ -1347,14 +1351,18 @@ maprequest(XEvent *e)
 void
 monocle(Monitor *m)
 {
-	unsigned int n = 0;
+	unsigned int n = 0, selidx = 0;
 	Client *c;
 
-	for (c = m->clients; c; c = c->next)
-		if (ISVISIBLE(c))
+	for (c = m->clients; c; c = c->next) {
+		if (ISVISIBLE(c)) {
 			n++;
-	if (n > 0) /* override layout symbol */
-		snprintf(m->ltsymbol, sizeof m->ltsymbol, "[%d]", n);
+			if (c == m->sel)
+				selidx = n;
+		}
+	}
+	if (n > 0)
+		snprintf(m->ltsymbol, sizeof m->ltsymbol, "[%d/%d]", selidx, n);
 	for (c = nexttiled(m->clients); c; c = nexttiled(c->next))
 		resize(c, m->wx, m->wy, m->ww - 2 * c->bw, m->wh - 2 * c->bw, 0);
 }

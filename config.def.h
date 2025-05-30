@@ -40,10 +40,11 @@ static const char *colors[][3]      = {
 static const char *const autostart[] = {
 //  "killall", "picom", NULL,
   "/home/mawi/.wz", NULL,
+	"dwmblocks", NULL,
 	"vibrant-cli", "eDP-1", "2.125", NULL,
 	"picom", "-b", "--config", "/home/mawi/.config/picom/dwm-picom.conf", NULL,
 	"xinput", "disable", "10" , NULL,
-	"light", "-S", "15", NULL,
+	"light", "-S", "20", NULL,
 	"numlockx", NULL,
   NULL /* terminate */
 };

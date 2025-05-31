@@ -26,14 +26,14 @@ static const char *fonts[]          = {
 static const char dmenufont[]       = "monospace:size=10";
 
 static const char col_gray1[]       = "#040404";
-static const char col_gray2[]       = "#444444";
+static const char col_gray2[]       = "#161616";
 static const char col_gray3[]       = "#bbbbbb";
-static const char col_gray4[]       = "#f0f0f0";
+static const char col_gray4[]       = "#fbfbfb";
 static const char col_cyan[]        = "#080808";
 
 static const char *colors[][3]      = {
 	/*               fg         bg         border   */
-	[SchemeNorm] = { col_gray4, col_gray1, col_gray1 },
+	[SchemeNorm] = { col_gray4, col_gray1, col_gray2 },
 	[SchemeSel]  = { col_gray1, col_gray4,  col_gray4  },
 };
 

@@ -18,6 +18,15 @@ static const int systraypinningfailfirst = 1;   /* 1: if pinning fails, display 
 static const int showsystray        = 1;        /* 0 means no systray */
 static const int showbar            = 1;        /* 0 means no bar */
 static const int topbar             = 1;        /* 0 means bottom bar */
+
+/* vanity gaps */
+static const unsigned int gappih    = 5;       /* horiz inner gap between windows */
+static const unsigned int gappiv    = 5;       /* vert inner gap between windows */
+static const unsigned int gappoh    = 5;       /* horiz outer gap between windows and screen edge */
+static const unsigned int gappov    = 5;       /* vert outer gap between windows and screen edge */
+static const int smartgaps          = 0;        /* 1 means no outer gap when there is only one window */
+
+
 // static const char *fonts[]          = { "TeX Gyre Heros:style=regular" };
 static const char *fonts[]          = {
   "TeX Gyre Heros:style=regular:weight=80:size=12:pixelsize=12:antialias=true:autohint=true",
@@ -154,6 +163,23 @@ static const Key keys[] = {
 	{ MODKEY,                       		XK_F4,      											monoclefocus,     			{.i = 4 } 								},
 	{ MODKEY,                       		XK_F5,      											monoclefocus,     			{.i = 5 } 								},
 	{ MODKEY,                 					XK_less,      										focusstack,     				{.i = +1 } 								},
+	/* vanity gaps */
+	{ MODKEY|Mod1Mask,              		XK_h,      												incrgaps,       				{.i = +1 } 								},
+	{ MODKEY|Mod1Mask,              		XK_l,      												incrgaps,      	 				{.i = -1 }							 	},
+	{ MODKEY|Mod1Mask|ShiftMask,    		XK_h,      												incrogaps,      				{.i = +1 } 								},					
+	{ MODKEY|Mod1Mask|ShiftMask,    		XK_l,      												incrogaps,      				{.i = -1 } 								},
+	{ MODKEY|Mod1Mask|ControlMask,  		XK_h,      												incrigaps,      				{.i = +1 } 								},
+	{ MODKEY|Mod1Mask|ControlMask,  		XK_l,      												incrigaps,      				{.i = -1 } 								},
+	{ MODKEY|Mod1Mask,              		XK_0,      												togglegaps,     				{0} 											},
+	{ MODKEY|Mod1Mask|ShiftMask,    		XK_0,      												defaultgaps,    				{0} 											},
+	{ MODKEY|Mod1Mask,                  XK_y,      												incrihgaps,     				{.i = +1 } 								},
+	{ MODKEY|Mod1Mask,                  XK_o,      												incrihgaps,     				{.i = -1 } 								},
+	{ MODKEY|ControlMask,           		XK_y,      												incrivgaps,     				{.i = +1 } 								},
+	{ MODKEY|ControlMask,           		XK_o,      												incrivgaps,     				{.i = -1 } 						    },
+	{ MODKEY|Mod4Mask,              		XK_y,      												incrohgaps,     				{.i = +1 }                },
+	{ MODKEY|Mod4Mask,              		XK_o,      												incrohgaps,     				{.i = -1 }                },
+	{ MODKEY|ShiftMask,             		XK_y,      												incrovgaps,     				{.i = +1 }                },
+	{ MODKEY|ShiftMask,             		XK_o,     												incrovgaps,     				{.i = -1 } 							  },
 
 	TAGKEYS(                        		XK_1,                      0)
 	TAGKEYS(                        		XK_2,                      1)

@@ -124,6 +124,7 @@ typedef struct {
 typedef struct {
 	const char *symbol;
 	void (*arrange)(Monitor *);
+	const char *name; // layout name
 } Layout;
 
 typedef struct Pertag Pertag;
@@ -527,6 +528,11 @@ buttonpress(XEvent *e)
 	}
 	if (ev->window == selmon->barwin) {
 		i = x = 0;
+
+		// Añade el ancho del nombre del layout si está activo
+		if (showlayoutname)
+			x += TEXTW(selmon->lt[selmon->sellt]->name);
+
 		do
 			x += TEXTW(tags[i]);
 		while (ev->x >= x && ++i < LENGTH(tags));
@@ -898,6 +904,13 @@ drawbar(Monitor *m)
 			urg |= c->tags;
 	}
 	x = 0;
+
+	if (showlayoutname) {
+		w = TEXTW(m->lt[m->sellt]->name);
+		drw_setscheme(drw, scheme[SchemeNorm]);
+		x = drw_text(drw, x, 0, w, bh, lrpad / 2, m->lt[m->sellt]->name, 0);
+	}
+	
 	for (i = 0; i < LENGTH(tags); i++) {
 		w = TEXTW(tags[i]);
 		drw_setscheme(drw, scheme[m->tagset[m->seltags] & 1 << i ? SchemeSel : SchemeNorm]);
@@ -1054,7 +1067,7 @@ monoclefocus ( const Arg *arg )
 	return;
 
 	for ( c = selmon->clients; c != NULL; c = c->next ) { // count all visible clients
-    if ( ISVISIBLE(c) ) {
+    if ( ISVISIBLE(c) && !c->isfloating ) {
       if (n == arg->i) { // rescue idx in tag 
 				s = c;
 				i = n;

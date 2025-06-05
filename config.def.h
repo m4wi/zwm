@@ -9,26 +9,28 @@
 /* See LICENSE file for copyright and license details. */
 
 /* appearance */
-static const unsigned int borderpx  = 1;        /* border pixel of windows */
-static const unsigned int snap      = 32;       /* snap pixel */
-static const unsigned int systraypinning = 0;   /* 0: sloppy systray follows selected monitor, >0: pin systray to monitor X */
-static const unsigned int systrayonleft = 1;    /* 0: systray in the right corner, >0: systray on left of status text */
-static const unsigned int systrayspacing = 2;   /* systray spacing */
-static const int systraypinningfailfirst = 1;   /* 1: if pinning fails, display systray on the first monitor, False: display systray on the last monitor*/
-static const int showsystray        = 1;        /* 0 means no systray */
-static const int showbar            = 1;        /* 0 means no bar */
-static const int topbar             = 1;        /* 0 means bottom bar */
+static const unsigned int borderpx  							= 1;        /* border pixel of windows */
+static const unsigned int snap      							= 32;       /* snap pixel */
+static const unsigned int systraypinning 					= 0;   /* 0: sloppy systray follows selected monitor, >0: pin systray to monitor X */
+static const unsigned int systrayonleft 					= 1;    /* 0: systray in the right corner, >0: systray on left of status text */
+static const unsigned int systrayspacing 					= 2;   /* systray spacing */
+static const int systraypinningfailfirst 					= 1;   /* 1: if pinning fails, display systray on the first monitor, False: display systray on the last monitor*/
+static const int showsystray       	 							= 1;        /* 0 means no systray */
+static const int showbar            							= 1;        /* 0 means no bar */
+static const int topbar             							= 1;        /* 0 means bottom bar */
+static const int showlayoutname										= 1;        /* 0 means no layout name in the bar */			
 
 /* vanity gaps */
-static const unsigned int gappih    = 5;       /* horiz inner gap between windows */
-static const unsigned int gappiv    = 5;       /* vert inner gap between windows */
-static const unsigned int gappoh    = 5;       /* horiz outer gap between windows and screen edge */
-static const unsigned int gappov    = 5;       /* vert outer gap between windows and screen edge */
-static const int smartgaps          = 0;        /* 1 means no outer gap when there is only one window */
+static const unsigned int gappih    							= 5;       /* horiz inner gap between windows */
+static const unsigned int gappiv   			 					= 5;       /* vert inner gap between windows */
+static const unsigned int gappoh    							= 5;       /* horiz outer gap between windows and screen edge */
+static const unsigned int gappov    							= 5;       /* vert outer gap between windows and screen edge */
+static const int smartgaps          							= 0;        /* 1 means no outer gap when there is only one window */
 
 
 // static const char *fonts[]          = { "TeX Gyre Heros:style=regular" };
-static const char *fonts[]          = {
+static const char *fonts[] = {
+//  "CozetteVector Nerd Font:weight=80:size=12:pixelsize=12:antialias=true:autohint=true",
   "TeX Gyre Heros:style=regular:weight=80:size=12:pixelsize=12:antialias=true:autohint=true",
   "JetBrainsMono Nerd Font:style=regular:weight=180:size=12:pixelsize=14:antialias=true:autohint=true"
 };
@@ -41,9 +43,9 @@ static const char col_gray4[]       = "#fbfbfb";
 static const char col_cyan[]        = "#080808";
 
 static const char *colors[][3]      = {
-	/*               fg         bg         border   */
-	[SchemeNorm] = { col_gray4, col_gray1, col_gray2 },
-	[SchemeSel]  = { col_gray1, col_gray4,  col_gray4  },
+	/*               fg         	bg         	border   */
+	[SchemeNorm] = { col_gray4, 	col_gray1, 	col_gray2 		},
+	[SchemeSel]  = { col_gray1, 	col_gray4,  col_gray4  		},
 };
 
 static const char *const autostart[] = {
@@ -65,8 +67,10 @@ static const char *volume_toggle[]   		= {"/home/mawi/.config/wm-scripts/zwm-scr
 static const char *light_up[]         	= {"/home/mawi/.config/wm-scripts/zwm-scripts/zwm-brightness", 			"up", 						NULL	};
 static const char *light_down[]       	= {"/home/mawi/.config/wm-scripts/zwm-scripts/zwm-brightness", 			"down", 					NULL	};
 static const char *mic_toggle[]      		= {"/home/mawi/.config/wm-scripts/zwm-scripts/zwm-mic",							 									NULL	};
-//static const char *mic_up[]         	= {"/home/mawi/.config/wm-scripts/zwm-mic, "high", 							"4", NULL};
-//static const char *mic_down[]       	= {"/home/mawi/.config/wm-scripts/zwm-mic", "low", "4", NULL};
+static const char *audio_play[]         = {"playerctl", "play-pause", NULL};
+static const char *audio_stop[]       	= {"playerctl", "stop", NULL};
+static const char *audio_prev[]       	= {"playerctl", "previous", NULL};
+static const char *audio_next[]       	= {"playerctl", "next", NULL};
 
 
 /* tagging */
@@ -93,10 +97,10 @@ static const int resizehints = 1;    /* 1 means respect size hints in tiled resi
 static const int lockfullscreen = 1; /* 1 will force focus on the fullscreen window */
 
 static const Layout layouts[] = {
-	/* symbol     arrange function */
-	{ "[]=",      tile },    /* first entry is default */
-	{ "><>",      NULL },    /* no layout function means floating behavior */
-	{ "[M]",      monocle },
+	/* symbol     arrange function 			layout name*/ 
+	{ "[]=",      tile,	 								"TILE"			},    /* first entry is default */
+	{ "><>",      NULL,  								"FLOATING"	},    /* no layout function means floating behavior */
+	{ "[M]",      monocle, 							"MONOCLE"		},
 };
 
 //static const Env envs[] = {
@@ -120,6 +124,7 @@ static const Layout layouts[] = {
 static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
 static const char *dmenucmd[] = { "zmenu_apps" };
 static const char *termcmd[]  = { "zt", NULL };
+static const char *zwmscreenshootcmd[] = { "zwm-screenshotter", NULL };
 
 static const Key keys[] = {
 	/* modifier                     		key       		 										function        				argument */
@@ -130,9 +135,12 @@ static const Key keys[] = {
 	{0,				      										XF86XK_MonBrightnessUp,		 				spawn,	         				{.v = light_up}						},
 	{0,				      										XF86XK_MonBrightnessDown,					spawn,	        			 	{.v = light_down}					},
 	{0,				      										XF86XK_AudioMicMute,							spawn,	        			 	{.v = mic_toggle}					},
-
+	{0,				      										XF86XK_AudioPlay,									spawn,	        			 	{.v = audio_play}					},
+	{0,				      										XF86XK_AudioStop,									spawn,	        			 	{.v = audio_stop}					},
+	{0,				      										XF86XK_AudioPrev,									spawn,	        			 	{.v = audio_prev}					},
+	{0,				      										XF86XK_AudioNext,									spawn,	        			 	{.v = audio_next}					},
 	{ MODKEY,            								XK_n, 														toggleview, 						{.ui = 1 << 8 } 					},
-	{ MODKEY|ShiftMask,             		XK_s,      												spawn,          				{.v = light_down } 				},
+	{ MODKEY|ShiftMask,             		XK_s,      												spawn,          				{.v = zwmscreenshootcmd } },
 	{ MODKEY,                       		XK_r,      												spawn,          				{.v = dmenucmd } 					},
 	{ MODKEY,                      			XK_Return, 												spawn,          				{.v = termcmd }						},
 	{ MODKEY,                       		XK_b,      												togglebar,      				{0} },
@@ -160,8 +168,11 @@ static const Key keys[] = {
 	{ MODKEY,                       		XK_F1,      											monoclefocus,     			{.i = 0 } 								},
 	{ MODKEY,                       		XK_F2,      											monoclefocus,     			{.i = 1 } 								},
 	{ MODKEY,                       		XK_F3,      											monoclefocus,     			{.i = 2 } 								},
-	{ MODKEY,                       		XK_F4,      											monoclefocus,     			{.i = 4 } 								},
-	{ MODKEY,                       		XK_F5,      											monoclefocus,     			{.i = 5 } 								},
+	{ MODKEY,                       		XK_F4,      											monoclefocus,     			{.i = 3 } 								},
+	{ MODKEY,                       		XK_F5,      											monoclefocus,     			{.i = 4 } 								},
+	{ MODKEY,                       		XK_F6,      											monoclefocus,     			{.i = 5 } 								},
+	{ MODKEY,                       		XK_F7,      											monoclefocus,     			{.i = 6 } 								},
+	{ MODKEY,                       		XK_F8,      											monoclefocus,     			{.i = 7 } 								},
 	{ MODKEY,                 					XK_less,      										focusstack,     				{.i = +1 } 								},
 	/* vanity gaps */
 	{ MODKEY|Mod1Mask,              		XK_h,      												incrgaps,       				{.i = +1 } 								},

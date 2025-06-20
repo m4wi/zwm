@@ -9,15 +9,15 @@
 /* See LICENSE file for copyright and license details. */
 
 /* appearance */
-static const unsigned int borderpx  							= 1;        /* border pixel of windows */
-static const unsigned int snap      							= 32;       /* snap pixel */
+static unsigned int borderpx  										= 1;        /* border pixel of windows */
+static unsigned int snap      							= 32;       /* snap pixel */
 static const unsigned int systraypinning 					= 0;   /* 0: sloppy systray follows selected monitor, >0: pin systray to monitor X */
 static const unsigned int systrayonleft 					= 1;    /* 0: systray in the right corner, >0: systray on left of status text */
 static const unsigned int systrayspacing 					= 2;   /* systray spacing */
 static const int systraypinningfailfirst 					= 1;   /* 1: if pinning fails, display systray on the first monitor, False: display systray on the last monitor*/
 static const int showsystray       	 							= 1;        /* 0 means no systray */
-static const int showbar            							= 1;        /* 0 means no bar */
-static const int topbar             							= 1;        /* 0 means bottom bar */
+static int showbar            							= 1;        /* 0 means no bar */
+static int topbar             							= 1;        /* 0 means bottom bar */
 static const int showlayoutname										= 1;        /* 0 means no layout name in the bar */			
 
 /* vanity gaps */
@@ -27,25 +27,41 @@ static const unsigned int gappoh    							= 5;       /* horiz outer gap between
 static const unsigned int gappov    							= 5;       /* vert outer gap between windows and screen edge */
 static const int smartgaps          							= 0;        /* 1 means no outer gap when there is only one window */
 
+// Xresources variables
+static char defaultfont[] = "TeX Gyre Heros:style=regular:weight=80:size=12:pixelsize=12:antialias=true:autohint=true";
+static char dmenufont[]       = "monospace:size=10";
+
+
 
 // static const char *fonts[]          = { "TeX Gyre Heros:style=regular" };
 static const char *fonts[] = {
-//  "CozetteVector Nerd Font:weight=80:size=12:pixelsize=12:antialias=true:autohint=true",
-  "TeX Gyre Heros:style=regular:weight=80:size=12:pixelsize=12:antialias=true:autohint=true",
+	defaultfont,
   "JetBrainsMono Nerd Font:style=regular:weight=180:size=12:pixelsize=14:antialias=true:autohint=true"
 };
-static const char dmenufont[]       = "monospace:size=10";
 
+/*
 static const char col_gray1[]       = "#040404";
 static const char col_gray2[]       = "#161616";
 static const char col_gray3[]       = "#bbbbbb";
 static const char col_gray4[]       = "#fbfbfb";
 static const char col_cyan[]        = "#080808";
-
-static const char *colors[][3]      = {
+*/
+static char normbgcolor[]           = "#040404";
+static char normbordercolor[]       = "#161616";
+static char normfgcolor[]           = "#fbfbfb";
+static char selfgcolor[]            = "#040404";
+static char selbordercolor[]        = "#fbfbfb";
+static char selbgcolor[]            = "#fbfbfb";
+//static const char *colors[][3]      = {
 	/*               fg         	bg         	border   */
-	[SchemeNorm] = { col_gray4, 	col_gray1, 	col_gray2 		},
-	[SchemeSel]  = { col_gray1, 	col_gray4,  col_gray4  		},
+//	[SchemeNorm] = { col_gray4, 	col_gray1, 	col_gray2 		},
+//	[SchemeSel]  = { col_gray1, 	col_gray4,  col_gray4  		},
+//};
+
+static char *colors[][3] = {
+  /*               fg           bg           border   */
+  [SchemeNorm] = { normfgcolor, normbgcolor, normbordercolor },
+  [SchemeSel]  = { selfgcolor,  selbgcolor,  selbordercolor  },
 };
 
 static const char *const autostart[] = {
@@ -88,20 +104,25 @@ static const Rule rules[] = {
 	{ NULL,  							          NULL,       								"Picture-in-Picture",     0,       			1,           -1 },
 	{ NULL,  							          "Navigator",       					NULL,     								1 << 0,       0,           -1 },
 	{ "TERMINAL_SCRATCHPAD",  			NULL,       								NULL,     								1 << 8,       1,           -1 },
+	{ "Nsxiv",     								  NULL,                      	NULL,                     0,            1,           -1 },
 };
 
 /* layout(s) */
-static const float mfact     = 0.55; /* factor of master area size [0.05..0.95] */
-static const int nmaster     = 1;   /* number of clients in master area */
-static const int resizehints = 1;    /* 1 means respect size hints in tiled resizals */
+static float mfact     = 0.55; /* factor of master area size [0.05..0.95] */
+static int nmaster     = 1;   /* number of clients in master area */
+static int resizehints = 1;    /* 1 means respect size hints in tiled resizals */
 static const int lockfullscreen = 1; /* 1 will force focus on the fullscreen window */
 
 static const Layout layouts[] = {
 	/* symbol     arrange function 			layout name*/ 
-	{ "[]=",      tile,	 								"TILE"			},    /* first entry is default */
-	{ "><>",      NULL,  								"FLOATING"	},    /* no layout function means floating behavior */
-	{ "[M]",      monocle, 							"MONOCLE"		},
+	{ " 󰀁 ",      tile,	 								"TILE"			},    /* first entry is default */
+	{ "  ",      NULL,  								"FLOATING"	},    /* no layout function means floating behavior */
+	{ "  ",      monocle, 							"MONOCLE"		},
 };
+
+
+// static const char *dmenucmd[] = { "dmenu_run", "-m", dmenumon, "-fn", dmenufont, "-nb", normbgcolor, "-nf", normfgcolor, "-sb", selbordercolor, "-sf", selfgcolor, NULL };
+
 
 //static const Env envs[] = {
 //	/* variable 	value */
@@ -123,8 +144,33 @@ static const Layout layouts[] = {
 /* commands */
 static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
 static const char *dmenucmd[] = { "zmenu_apps" };
-static const char *termcmd[]  = { "zt", NULL };
+static const char *termcmd[]  = { "st", NULL };
 static const char *zwmscreenshootcmd[] = { "zwm-screenshotter", NULL };
+static const char *clipmenu[] = { "clipmenu", NULL };
+
+/*
+ * Xresources preferences to load at startup
+*/
+ResourcePref resources[] = {
+	{ "font",               STRING,  &defaultfont },
+	{ "dmenufont",          STRING,  &dmenufont },
+	{ "normbgcolor",        STRING,  &normbgcolor },
+	{ "normbordercolor",    STRING,  &normbordercolor },
+	{ "normfgcolor",        STRING,  &normfgcolor },
+	{ "selbgcolor",         STRING,  &selbgcolor },
+	{ "selbordercolor",     STRING,  &selbordercolor },
+	{ "selfgcolor",         STRING,  &selfgcolor },
+	{ "borderpx",          	INTEGER, &borderpx },
+	{ "snap",          			INTEGER, &snap },
+	{ "showbar",          	INTEGER, &showbar },
+	{ "topbar",          		INTEGER, &topbar },
+	{ "nmaster",          	INTEGER, &nmaster },
+	{ "resizehints",       	INTEGER, &resizehints },
+	{ "mfact",      	 			FLOAT,   &mfact },
+};
+
+
+
 
 static const Key keys[] = {
 	/* modifier                     		key       		 										function        				argument */
@@ -139,6 +185,7 @@ static const Key keys[] = {
 	{0,				      										XF86XK_AudioStop,									spawn,	        			 	{.v = audio_stop}					},
 	{0,				      										XF86XK_AudioPrev,									spawn,	        			 	{.v = audio_prev}					},
 	{0,				      										XF86XK_AudioNext,									spawn,	        			 	{.v = audio_next}					},
+  { MODKEY,            								XK_v, 														spawn,   						    {.v = clipmenu} 					},
 	{ MODKEY,            								XK_n, 														toggleview, 						{.ui = 1 << 8 } 					},
 	{ MODKEY|ShiftMask,             		XK_s,      												spawn,          				{.v = zwmscreenshootcmd } },
 	{ MODKEY,                       		XK_r,      												spawn,          				{.v = dmenucmd } 					},

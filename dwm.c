@@ -134,6 +134,7 @@ struct Monitor {
 	float mfact;
 	int nmaster;
 	int num;
+	int eby;              /* extra bar geometry */
 	int by;               /* bar geometry */
 	int mx, my, mw, mh;   /* screen size */
 	int wx, wy, ww, wh;   /* window area  */
@@ -146,11 +147,13 @@ struct Monitor {
 	unsigned int tagset[2];
 	int showbar;
 	int topbar;
+	int extrabar;
 	Client *clients;
 	Client *sel;
 	Client *stack;
 	Monitor *next;
 	Window barwin;
+	Window extrabarwin;
 	const Layout *lt[2];
 	Pertag *pertag;
 };
@@ -300,12 +303,15 @@ static int xerrorstart(Display *dpy, XErrorEvent *ee);
 static void zoom(const Arg *arg);
 static void load_xresources(void);
 static void resource_load(XrmDatabase db, char *name, enum resource_type rtype, void *dst);
+static void get_client_class(Client *c, char *classbuf, size_t buflen);
 static void systemautostart(void);
 
 /* variables */
 static Systray *systray = NULL;
 static const char broken[] = "broken";
 static char stext[256];
+static char estextl[256];
+static char estextr[256];
 static int screen;
 static int sw, sh;           /* X display screen geometry width, height */
 static int bh;               /* bar height */
@@ -625,7 +631,9 @@ cleanupmon(Monitor *mon)
 		m->next = mon->next;
 	}
 	XUnmapWindow(dpy, mon->barwin);
+	XUnmapWindow(dpy, mon->extrabarwin);
 	XDestroyWindow(dpy, mon->barwin);
+	XDestroyWindow(dpy, mon->extrabarwin);
 	free(mon);
 }
 
@@ -808,6 +816,7 @@ createmon(void)
 	m->nmaster = nmaster;
 	m->showbar = showbar;
 	m->topbar = topbar;
+	m->extrabar = extrabar;
 	m->gappih = gappih;
 	m->gappiv = gappiv;
 	m->gappoh = gappoh;
@@ -888,7 +897,7 @@ dirtomon(int dir)
 void
 drawbar(Monitor *m)
 {
-	int x, w, tw = 0, stw = 0;
+	int x, w, tw = 0, stw = 0, etwl = 0, etwr = 0;
 	int boxs = drw->fonts->h / 9;
 	int boxw = drw->fonts->h / 6 + 2;
 	unsigned int i, occ = 0, urg = 0;
@@ -947,6 +956,29 @@ drawbar(Monitor *m)
 		}
 	}
 	drw_map(drw, m->barwin, 0, 0, m->ww - stw, bh);
+	
+	if ( m == selmon && m->sellt == 1 ) { /* extra status is only drawn on selected monitor */
+		estextl[0] = '\0'; // Limpia el buffer
+    char classbuf[64];
+    int idx = 1;
+    Client *c;
+    for (c = m->clients; c; c = c->next) {
+        if (ISVISIBLE(c)) {
+            get_client_class(c, classbuf, sizeof(classbuf));
+            char entry[80];
+            snprintf(entry, sizeof(entry), "%d:%s  ", idx++, classbuf);
+            strncat(estextl, entry, sizeof(estextl) - strlen(estextl) - 1);
+        }
+    }
+		drw_setscheme(drw, scheme[SchemeNorm]);
+		/* clear default bar draw buffer by drawing a blank rectangle */
+		drw_rect(drw, 0, 0, m->ww, bh, 1, 1);
+		etwr = TEXTW(estextr) - lrpad + 2; /* 2px right padding */
+		drw_text(drw, m->ww - etwr, 0, etwr, bh, 0, estextr, 0);
+		etwl = TEXTW(estextl);
+		drw_text(drw, 0, 0, etwl, bh, 0, estextl, 0);
+		drw_map(drw, m->extrabarwin, 0, 0, m->ww, bh);
+	}
 }
 
 void
@@ -1597,6 +1629,12 @@ resizebarwin(Monitor *m) {
 	if (showsystray && m == systraytomon(m) && !systrayonleft)
 		w -= getsystraywidth();
 	XMoveResizeWindow(dpy, m->barwin, m->wx, m->by, w, bh);
+
+	if ( m->sellt == 1 ){
+		XMoveResizeWindow(dpy, m->extrabarwin, m->wx, m->eby, m->ww, bh);
+	}	else {
+		XMoveResizeWindow(dpy, m->extrabarwin, m->wx, m->eby, m->ww, bh);
+	}
 }
 
 void
@@ -1962,10 +2000,15 @@ setlayout(const Arg *arg)
 	if (arg && arg->v)
 		selmon->lt[selmon->sellt] = selmon->pertag->ltidxs[selmon->pertag->curtag][selmon->sellt] = (Layout *)arg->v;
 	strncpy(selmon->ltsymbol, selmon->lt[selmon->sellt]->symbol, sizeof selmon->ltsymbol);
-	if (selmon->sel)
+
+	if (selmon->sel) {
+		updatebarpos(selmon);
+		resizebarwin(selmon);
 		arrange(selmon);
+	}
 	else
 		drawbar(selmon);
+
 }
 
 /* arg > 1.0 will set mfact absolutely */
@@ -2369,19 +2412,28 @@ updatebars(void)
 	};
 	XClassHint ch = {"dwm", "dwm"};
 	for (m = mons; m; m = m->next) {
-		if (m->barwin)
-			continue;
-		w = m->ww;
-		if (showsystray && m == systraytomon(m))
-			w -= getsystraywidth();
-		m->barwin = XCreateWindow(dpy, root, m->wx, m->by, w, bh, 0, DefaultDepth(dpy, screen),
-				CopyFromParent, DefaultVisual(dpy, screen),
-				CWOverrideRedirect|CWBackPixmap|CWEventMask, &wa);
-		XDefineCursor(dpy, m->barwin, cursor[CurNormal]->cursor);
-		if (showsystray && m == systraytomon(m))
-			XMapRaised(dpy, systray->win);
-		XMapRaised(dpy, m->barwin);
-		XSetClassHint(dpy, m->barwin, &ch);
+		if ( !m->barwin ) {
+			w = m->ww;
+			if (showsystray && m == systraytomon(m))
+				w -= getsystraywidth();
+			m->barwin = XCreateWindow(dpy, root, m->wx, m->by, w, bh, 0, DefaultDepth(dpy, screen),
+					CopyFromParent, DefaultVisual(dpy, screen),
+					CWOverrideRedirect|CWBackPixmap|CWEventMask, &wa);
+			XDefineCursor(dpy, m->barwin, cursor[CurNormal]->cursor);
+			if (showsystray && m == systraytomon(m))
+				XMapRaised(dpy, systray->win);
+			XMapRaised(dpy, m->barwin);
+			XSetClassHint(dpy, m->barwin, &ch);
+		}
+		//if ( !m->extrabarwin && m->sellt == 1 ) {
+		if ( !m->extrabarwin ) {
+			m->extrabarwin = XCreateWindow(dpy, root, m->wx, m->eby, m->ww, bh, 0, DefaultDepth(dpy, screen),
+					CopyFromParent, DefaultVisual(dpy, screen),
+					CWOverrideRedirect|CWBackPixmap|CWEventMask, &wa);
+			XDefineCursor(dpy, m->extrabarwin, cursor[CurNormal]->cursor);
+			XMapRaised(dpy, m->extrabarwin);
+			XSetClassHint(dpy, m->extrabarwin, &ch);
+		}
 	}
 }
 
@@ -2396,6 +2448,12 @@ updatebarpos(Monitor *m)
 		m->wy = m->topbar ? m->wy + bh : m->wy;
 	} else
 		m->by = -bh;
+	if ( m->extrabar && m->sellt == 1 ) {
+		m->wh -= bh;
+		m->eby = !m->topbar ? m->wy : m->wy + m->wh;
+		m->wy = !m->topbar ? m->wy + bh : m->wy;
+	} else
+		m->eby = -bh;
 }
 
 void
@@ -2553,8 +2611,26 @@ updatesizehints(Client *c)
 void
 updatestatus(void)
 {
-	if (!gettextprop(root, XA_WM_NAME, stext, sizeof(stext)))
+	char text[768];
+	if ( !gettextprop(root, XA_WM_NAME, text, sizeof(text)) ) {
 		strcpy(stext, "dwm-"VERSION);
+		estextl[0] = '\0';
+		estextr[0] = '\0';
+	} else {
+/* 		char *l = strchr(text, statussep);
+		if (l) {
+			*l = '\0'; l++;
+			strncpy(estextl, l, sizeof(estextl) - 1);
+		} else
+			estextl[0] = '\0'; */
+		char *r = strchr(estextl, statussep);
+		if (r) {
+			*r = '\0'; r++;
+			strncpy(estextr, r, sizeof(estextr) - 1);
+		} else
+			estextr[0] = '\0';
+		strncpy(stext, text, sizeof(stext) - 1);
+	}
 	drawbar(selmon);
 	updatesystray();
 }
@@ -2750,7 +2826,8 @@ view(const Arg *arg)
 
 	if (selmon->showbar != selmon->pertag->showbars[selmon->pertag->curtag])
 		togglebar(NULL);
-
+	updatebarpos(selmon);
+	resizebarwin(selmon);
 	focus(selmon->pertag->sel[selmon->pertag->curtag]);
 	arrange(selmon);
 }
@@ -2788,7 +2865,7 @@ wintomon(Window w)
 	if (w == root && getrootptr(&x, &y))
 		return recttomon(x, y, 1, 1);
 	for (m = mons; m; m = m->next)
-		if (w == m->barwin)
+		if (w == m->barwin || w == m->extrabarwin)
 			return m;
 	if ((c = wintoclient(w)))
 		return c->mon;
@@ -2939,4 +3016,19 @@ main(int argc, char *argv[])
 	cleanup();
 	XCloseDisplay(dpy);
 	return EXIT_SUCCESS;
+}
+
+
+void get_client_class(Client *c, char *classbuf, size_t buflen) {
+    XClassHint ch = { NULL, NULL };
+    classbuf[0] = '\0';
+    if (XGetClassHint(dpy, c->win, &ch)) {
+        if (ch.res_class) {
+            strncpy(classbuf, ch.res_class, buflen - 1);
+            classbuf[buflen - 1] = '\0';
+            XFree(ch.res_class);
+        }
+        if (ch.res_name)
+            XFree(ch.res_name);
+    }
 }

@@ -18,6 +18,8 @@ static const int systraypinningfailfirst 					= 1;   /* 1: if pinning fails, dis
 static const int showsystray       	 							= 1;        /* 0 means no systray */
 static int showbar            							= 1;        /* 0 means no bar */
 static int topbar             							= 1;        /* 0 means bottom bar */
+static const int extrabar           = 1;        /* 0 means no extra bar */
+static const char statussep         = ';';      /* separator between statuses */
 static const int showlayoutname										= 1;        /* 0 means no layout name in the bar */			
 
 /* vanity gaps */

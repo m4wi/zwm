@@ -9,34 +9,35 @@
 /* See LICENSE file for copyright and license details. */
 
 /* appearance */
-static unsigned int borderpx  										= 1;        /* border pixel of windows */
-static unsigned int snap      							= 32;       /* snap pixel */
-static const unsigned int systraypinning 					= 0;   /* 0: sloppy systray follows selected monitor, >0: pin systray to monitor X */
-static const unsigned int systrayonleft 					= 1;    /* 0: systray in the right corner, >0: systray on left of status text */
-static const unsigned int systrayspacing 					= 2;   /* systray spacing */
-static const int systraypinningfailfirst 					= 1;   /* 1: if pinning fails, display systray on the first monitor, False: display systray on the last monitor*/
-static const int showsystray       	 							= 1;        /* 0 means no systray */
-static int showbar            							= 1;        /* 0 means no bar */
-static int topbar             							= 1;        /* 0 means bottom bar */
-static const int showlayoutname										= 1;        /* 0 means no layout name in the bar */			
+static unsigned int borderpx  										  = 1;        /* border pixel of windows */
+static unsigned int snap      							        = 32;       /* snap pixel */
+static const unsigned int systraypinning 					  = 0;   /* 0: sloppy systray follows selected monitor, >0: pin systray to monitor X */
+static const unsigned int systrayonleft 					  = 1;    /* 0: systray in the right corner, >0: systray on left of status text */
+static const unsigned int systrayspacing 					  = 2;   /* systray spacing */
+static const int systraypinningfailfirst 					  = 1;   /* 1: if pinning fails, display systray on the first monitor, False: display systray on the last monitor*/
+static const int showsystray       	 							  = 1;        /* 0 means no systray */
+static int showbar            							        = 1;        /* 0 means no bar */
+static int topbar             							        = 1;        /* 0 means bottom bar */
+static const int showlayoutname										  = 1;        /* 0 means no layout name in the bar */			
 
 /* vanity gaps */
-static const unsigned int gappih    							= 5;       /* horiz inner gap between windows */
-static const unsigned int gappiv   			 					= 5;       /* vert inner gap between windows */
-static const unsigned int gappoh    							= 5;       /* horiz outer gap between windows and screen edge */
-static const unsigned int gappov    							= 5;       /* vert outer gap between windows and screen edge */
-static const int smartgaps          							= 0;        /* 1 means no outer gap when there is only one window */
+static const unsigned int gappih    							  = 5;       /* horiz inner gap between windows */
+static const unsigned int gappiv   			 					  = 5;       /* vert inner gap between windows */
+static const unsigned int gappoh    							  = 5;       /* horiz outer gap between windows and screen edge */
+static const unsigned int gappov    							  = 5;       /* vert outer gap between windows and screen edge */
+static const int smartgaps          							  = 0;        /* 1 means no outer gap when there is only one window */
+static const char *autostartFilePath 							  = "/home/mawi/.config/dwm/autostart"; /* autostart file path */
+
 
 // Xresources variables
-static char defaultfont[] = "TeX Gyre Heros:style=regular:weight=80:size=12:pixelsize=12:antialias=true:autohint=true";
-static char dmenufont[]       = "monospace:size=10";
+static char defaultfont[]                           = "TeX Gyre Heros:style=regular:weight=50:size=12:pixelsize=12:antialias=true:autohint=true";
+static char dmenufont[]                             = "TeX Gyre Heros:style=regular:weight=80:size=12:pixelsize=12:antialias=true:autohint=true";
 
-
-
-// static const char *fonts[]          = { "TeX Gyre Heros:style=regular" };
+// static const char *fonts[]                       = { "TeX Gyre Heros:style=regular" };
+//
 static const char *fonts[] = {
 	defaultfont,
-  "JetBrainsMono Nerd Font:style=regular:weight=180:size=12:pixelsize=14:antialias=true:autohint=true"
+  "JetBrainsMono Nerd Font:style=regular:weight=50:size=12:pixelsize=14:antialias=true:autohint=true"
 };
 
 /*
@@ -52,6 +53,7 @@ static char normfgcolor[]           = "#fbfbfb";
 static char selfgcolor[]            = "#040404";
 static char selbordercolor[]        = "#fbfbfb";
 static char selbgcolor[]            = "#fbfbfb";
+
 //static const char *colors[][3]      = {
 	/*               fg         	bg         	border   */
 //	[SchemeNorm] = { col_gray4, 	col_gray1, 	col_gray2 		},
@@ -60,21 +62,9 @@ static char selbgcolor[]            = "#fbfbfb";
 
 static char *colors[][3] = {
   /*               fg           bg           border   */
-  [SchemeNorm] = { normfgcolor, normbgcolor, normbordercolor },
-  [SchemeSel]  = { selfgcolor,  selbgcolor,  selbordercolor  },
+  [SchemeNorm]  = { normfgcolor, normbgcolor, normbordercolor },
+  [SchemeSel]   = { selfgcolor,  selbgcolor,  selbordercolor  },
 };
-
-static const char *const autostart[] = {
-//  "killall", "picom", NULL,
-  "/home/mawi/.wz", NULL,
-	"vibrant-cli", "eDP-1", "2.125", NULL,
-	"picom", "-b", "--config", "/home/mawi/.config/picom/dwm-picom.conf", NULL,
-	"xinput", "disable", "10" , NULL,
-	"light", "-S", "20", NULL,
-	"numlockx", NULL,
-  NULL /* terminate */
-};
-
 
 /* Special Key*/
 static const char *volume_up[]       		= {"/home/mawi/.config/wm-scripts/zwm-scripts/zwm-volume", 					"high" , 		"4", 	NULL	};
@@ -90,7 +80,7 @@ static const char *audio_next[]       	= {"playerctl", "next", NULL};
 
 
 /* tagging */
-static const char *tags[] = { "1", "2", "3", "4", "5", "6", "7", "8", "9" };
+static const char *tags[] = { "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX" };
 
 
 
@@ -101,7 +91,7 @@ static const Rule rules[] = {
 	 */
 	/* class      									instance    								title                     tags mask     isfloating   monitor */
 	{ NULL,     										"ZWM_SCREENSHOTTER",       	NULL,                     0,            1,           -1 },
-	{ NULL,  							          NULL,       								"Picture-in-Picture",     0,       			1,           -1 },
+	{ NULL,  							          NULL,       								"Picture-in-Picture",     ~0,       			1,           -1 },
 	{ NULL,  							          "Navigator",       					NULL,     								1 << 0,       0,           -1 },
 	{ "TERMINAL_SCRATCHPAD",  			NULL,       								NULL,     								1 << 8,       1,           -1 },
 	{ "Nsxiv",     								  NULL,                      	NULL,                     0,            1,           -1 },
@@ -115,7 +105,7 @@ static const int lockfullscreen = 1; /* 1 will force focus on the fullscreen win
 
 static const Layout layouts[] = {
 	/* symbol     arrange function 			layout name*/ 
-	{ " 󰀁 ",      tile,	 								"TILE"			},    /* first entry is default */
+	{ " 󰙠 ",      tile,	 								"TILE"			},    /* first entry is default */
 	{ "  ",      NULL,  								"FLOATING"	},    /* no layout function means floating behavior */
 	{ "  ",      monocle, 							"MONOCLE"		},
 };
@@ -133,20 +123,20 @@ static const Layout layouts[] = {
 /* key definitions */
 #define MODKEY Mod4Mask
 #define TAGKEYS(KEY,TAG) \
-	{ MODKEY,                       KEY,      view,           {.ui = 1 << TAG} }, \
-	{ MODKEY|ControlMask,           KEY,      toggleview,     {.ui = 1 << TAG} }, \
-	{ MODKEY|ShiftMask,             KEY,      tag,            {.ui = 1 << TAG} }, \
-	{ MODKEY|ControlMask|ShiftMask, KEY,      toggletag,      {.ui = 1 << TAG} },
+	{ MODKEY,                           KEY,      view,           {.ui = 1 << TAG} }, \
+	{ MODKEY|ControlMask,               KEY,      toggleview,     {.ui = 1 << TAG} }, \
+	{ MODKEY|ShiftMask,                 KEY,      tag,            {.ui = 1 << TAG} }, \
+	{ MODKEY|ControlMask|ShiftMask,     KEY,      toggletag,      {.ui = 1 << TAG} },
 
 /* helper for spawning shell commands in the pre dwm-5.0 fashion */
 #define SHCMD(cmd) { .v = (const char*[]){ "/bin/sh", "-c", cmd, NULL } }
 
 /* commands */
-static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
-static const char *dmenucmd[] = { "zmenu_apps" };
-static const char *termcmd[]  = { "st", NULL };
-static const char *zwmscreenshootcmd[] = { "zwm-screenshotter", NULL };
-static const char *clipmenu[] = { "clipmenu", NULL };
+static char dmenumon[2]                         = "0"; /* component of dmenucmd, manipulated in spawn() */
+static const char *dmenucmd[]                   = { "zmenu_apps","-fn", dmenufont,"-nb", normbgcolor , "-nf", normfgcolor, "-sb", selbordercolor, "-sf", normbordercolor, "-p", " Launch app: ", NULL};
+static const char *termcmd[]                    = { "st", NULL };
+static const char *zwmscreenshootcmd[]          = { "zwm-screenshotter", NULL };
+static const char *clipmenu[]                   = { "clipmenu", NULL };
 
 /*
  * Xresources preferences to load at startup

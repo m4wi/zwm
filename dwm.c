@@ -301,10 +301,10 @@ static int xerror(Display *dpy, XErrorEvent *ee);
 static int xerrordummy(Display *dpy, XErrorEvent *ee);
 static int xerrorstart(Display *dpy, XErrorEvent *ee);
 static void zoom(const Arg *arg);
-static void autostart_exec(void);
 static void load_xresources(void);
 static void resource_load(XrmDatabase db, char *name, enum resource_type rtype, void *dst);
 static void get_client_class(Client *c, char *classbuf, size_t buflen);
+static void systemautostart(void);
 
 /* variables */
 static Systray *systray = NULL;
@@ -363,35 +363,29 @@ struct Pertag {
 /* compile-time check if all tags fit into an unsigned int bit array. */
 struct NumTags { char limitexceeded[LENGTH(tags) > 31 ? -1 : 1]; };
 
-/* dwm will keep pid's of processes from autostart array and kill them at quit */
-static pid_t *autostart_pids;
-static size_t autostart_len;
+/* function implementations */
 
-/* execute command from autostart array */
-static void
-autostart_exec() {
-	const char *const *p;
-	size_t i = 0;
-
-	/* count entries */
-	for (p = autostart; *p; autostart_len++, p++)
-		while (*++p);
-
-	autostart_pids = malloc(autostart_len * sizeof(pid_t));
-	for (p = autostart; *p; i++, p++) {
-		if ((autostart_pids[i] = fork()) == 0) {
-			setsid();
-			execvp(*p, (char *const *)p);
-			fprintf(stderr, "dwm: execvp %s\n", *p);
-			perror(" failed");
-			_exit(EXIT_FAILURE);
-		}
-		/* skip arguments */
-		while (*++p);
-	}
+void systemautostart() {
+  pid_t pid = fork();
+    
+  if (pid == -1) {
+    // Error al hacer fork
+    perror("fork failed");
+    return;
+  } else if (pid == 0) {
+    // Crear una nueva sesión para desvincular los procesos del padre
+    if (setsid() < 0) {
+        perror("setsid failed");
+			  exit(EXIT_FAILURE);
+    }
+    // Ejecutar el script directamente
+    execl("/bin/sh", "sh", autostartFilePath, (char *)NULL);
+    perror("execl failed");
+		exit(EXIT_FAILURE);
+  }
+    // Proceso padre continúa sin esperar al hijo
 }
 
-/* function implementations */
 void
 applyrules(Client *c)
 {
@@ -933,7 +927,7 @@ drawbar(Monitor *m)
 	if (showlayoutname) {
 		w = TEXTW(m->lt[m->sellt]->name);
 		drw_setscheme(drw, scheme[SchemeNorm]);
-		x = drw_text(drw, x, 0, w, bh, lrpad / 2, m->lt[m->sellt]->name, 0);
+		x = drw_text(drw, x, 0, w, bh, lrpad / 2, m->lt[m->sellt]->name, 1);
 	}
 	
 	for (i = 0; i < LENGTH(tags); i++) {
@@ -1591,14 +1585,6 @@ propertynotify(XEvent *e)
 void
 quit(const Arg *arg)
 {
-    size_t i;
-    /* kill child processes */
-    for (i = 0; i < autostart_len; i++) {
-    	if (0 < autostart_pids[i]) {
-    		kill(autostart_pids[i], SIGTERM);
-    		waitpid(autostart_pids[i], NULL, 0);
-    	}
-    }
 	if(arg->i) restart = 1;
 	running = 0;
 }
@@ -3018,8 +3004,8 @@ main(int argc, char *argv[])
 	checkotherwm();
 	XrmInitialize();
 	load_xresources();
-	autostart_exec();
 	setup();
+	systemautostart();
 #ifdef __OpenBSD__
 	if (pledge("stdio rpath proc exec", NULL) == -1)
 		die("pledge");

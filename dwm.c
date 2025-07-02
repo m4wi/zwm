@@ -112,7 +112,6 @@ struct Client {
 	Client *snext;
 	Monitor *mon;
 	Window win;
-	int tgidx[9]; // relative index of window pertag
 };
 
 typedef struct {
@@ -897,7 +896,7 @@ dirtomon(int dir)
 void
 drawbar(Monitor *m)
 {
-	int x, w, tw = 0, stw = 0, etwl = 0, etwr = 0;
+	int x, w, tw = 0, stw = 0, etwr = 0;
 	int boxs = drw->fonts->h / 9;
 	int boxw = drw->fonts->h / 6 + 2;
 	unsigned int i, occ = 0, urg = 0;
@@ -958,27 +957,28 @@ drawbar(Monitor *m)
 	drw_map(drw, m->barwin, 0, 0, m->ww - stw, bh);
 	
 	if ( m == selmon && m->sellt == 1 ) { /* extra status is only drawn on selected monitor */
+		drw_setscheme(drw, scheme[SchemeNorm]);
+		drw_rect(drw, 0, 0, m->ww, bh, 1, 1);
 		estextl[0] = '\0'; // Limpia el buffer
-    char classbuf[64];
-    int idx = 1;
+    char entry_class_name[64];
+    int idx = 1, bottom_width_bar = 0, bottom_bar_width_markup = 0;
     Client *c;
     for (c = m->clients; c; c = c->next) {
-        if (ISVISIBLE(c)) {
-            get_client_class(c, classbuf, sizeof(classbuf));
-            char entry[80];
-            snprintf(entry, sizeof(entry), "%d:%s  ", idx++, classbuf);
-            strncat(estextl, entry, sizeof(estextl) - strlen(estextl) - 1);
-        }
+      if (ISVISIBLE(c)) {
+        get_client_class(c, entry_class_name, sizeof(entry_class_name));
+				snprintf(estextl, sizeof(estextl), "%d : %s", idx, entry_class_name);
+				// snprintf(entry_index_casted, sizeof(entry_index_casted), "%d", idx);
+				bottom_width_bar = TEXTW(estextl);
+				drw_setscheme(drw, scheme[c == selmon->sel ? SchemeSel : SchemeNorm]);
+				drw_text(drw, bottom_bar_width_markup, 0, bottom_width_bar, bh, lrpad / 2, estextl, 0);
+				idx++;
+				bottom_bar_width_markup += bottom_width_bar;
+			}
     }
-		drw_setscheme(drw, scheme[SchemeNorm]);
-		/* clear default bar draw buffer by drawing a blank rectangle */
-		drw_rect(drw, 0, 0, m->ww, bh, 1, 1);
 		etwr = TEXTW(estextr) - lrpad + 2; /* 2px right padding */
 		drw_text(drw, m->ww - etwr, 0, etwr, bh, 0, estextr, 0);
-		etwl = TEXTW(estextl);
-		drw_text(drw, 0, 0, etwl, bh, 0, estextl, 0);
 		drw_map(drw, m->extrabarwin, 0, 0, m->ww, bh);
-	}
+  }
 }
 
 void
